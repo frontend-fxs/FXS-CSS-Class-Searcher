@@ -1,0 +1,26 @@
+{
+  "name": "fxs-css-class-searcher",
+  "version": "1.0.0",
+  "description": "Returns in terminal the URLs list where the Class Appears in the FXS English Domain.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frontend-fxs/FXS-CSS-Class-Searcher.git"
+  },
+  "keywords": [
+    "webscrapper",
+    "searcher",
+    "css",
+    "class",
+    "fxs"
+  ],
+  "author": "operezol - Oriol Pérez Olivares - frontend-fxs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/frontend-fxs/FXS-CSS-Class-Searcher/issues"
+  },
+  "homepage": "https://github.com/frontend-fxs/FXS-CSS-Class-Searcher#readme"
+}
