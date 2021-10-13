@@ -1,36 +1,37 @@
-const puppeteer = require('puppeteer');
-let urlList = [];
+const axios = require('axios').default;
+const cheerio = require('cheerio');
+const elementToSearch = '.sticky';
 
-async function getAnchors(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(error => error);
-  const getData = async () => {
-    return await page.evaluate(() => {
-      let anchors = document.querySelectorAll('a');
-      let internalUrls = []
-      for (let index = 0; index < anchors.length; index++) {
-        const href = anchors[index].getAttribute("href");
-        internalUrls.push(href);
-      }
-      return internalUrls;
+let urlList = [{ visited: false, href: 'https://www.fxstreet.com/' }];
+
+async function getHtmlData(url) {
+  try {
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+    const anchors = [];
+
+    $('a').each((_idx, el) => {
+      const anchor = $(el).attr('href')
+      anchors.push(anchor);
     });
+
+    console.log($(elementToSearch).lenght)
+    
+    const found = false; 
+    return { hrefs: anchors, found: 0 };
+  } catch (error) {
+    throw error;
   }
-  provisionalUrls = await getData();
-  console.log(provisionalUrls)
-  await browser.close();
-  return provisionalUrls
 }
 
-async function updatePageList(urlList) {
+async function updatePageList(hrefList) {
   let domain = 'https://www.fxstreet.com';
-  for (let i = 0; i < urlList.lupdatePageListength; i++) {
-    href = urlList[i];
+  for (let i = 0; i < hrefList.length; i++) {
+    href = hrefList[i];
     if (href) {
       if (/^\//.test(href)) {
         href = domain + href;
       }
-      console.log(typeof href);
       if (href.includes("?")) {
         href = href.slice(0, href.indexOf("?"));
       }
@@ -39,25 +40,29 @@ async function updatePageList(urlList) {
       }
       const found = urlList.some(el => el.href === href);
       const isFxstreetDomain = /^https:\/\/www.fxstreet.com/.test(href)
-      if (!found && isFxstreetDomain) urlList.push({ visited: false, href: href });
+      console.log('found',found,'isFxstreetDomain',isFxstreetDomain);
+      if (!found && isFxstreetDomain) { urlList.push({ visited: false, href: href }); }
     }
   }
 }
 
 async function getUnvisitedUrl() {
-  var unvisitedUrls = urlList.filter(obj => {
-    return obj.visited === false
-  })
-  console.log(unvisitedUrls[0]);
-  return unvisitedUrls ? unvisitedUrls[0] : false;
+  return urlList.find(obj => !obj.visited);
 }
 
-async function scrapp(url = 'https://www.fxstreet.com/') {
-  let provisionalUrlList = await getAnchors(url);
-  await updatePageList(provisionalUrlList);
-  let unvisitedUrl = await getUnvisitedUrl();
-  console.log('unvisitedUrl',unvisitedUrl);
-  if (unvisitedUrl) { scrapp(unvisitedUrl); } else { console.log('end'); }
+async function scrapp() {
+  let unvisitedUrlObj = await getUnvisitedUrl();
+  let unvisitedUrl = unvisitedUrlObj.href;
+  console.log('unvisited url item', unvisitedUrl);
+  if (unvisitedUrl) {
+    let outputData = await getHtmlData(unvisitedUrl);
+    if (outputData.found > 0) console.log('class found on: ', url);
+    urlList.map(url => url.href === unvisitedUrl ? { href: unvisitedUrl, visited: true } : url);
+    await updatePageList(outputData.hrefs);
+    scrapp();
+  } else {
+    console.log('end');
+  }
 }
 
 (async () => {
